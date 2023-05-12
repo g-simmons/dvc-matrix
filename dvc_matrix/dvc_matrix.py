@@ -43,7 +43,8 @@ def cli(ctx, file, output):
             yaml.dump(dvcyaml, f, default_flow_style=False)
     else:
         args = {
-            arg.split("=")[0].replace("--", ""): arg.split("=")[1] for arg in ctx.args
+            arg.split("=")[0].replace("--", ""): arg.split("=")[1].split(",")
+            for arg in ctx.args
         }
         if args:
             print(yamlgrid(**args))
