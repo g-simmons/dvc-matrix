@@ -4,8 +4,10 @@ from collections import namedtuple
 import click
 import dvc.api
 import os
-import json
+import json as jsonlib
 import re
+from rich.console import Console
+from rich.table import Table
 
 
 def named_product(**items):
@@ -33,11 +35,28 @@ def cli():
     pass
 
 
+def print_stage_list(stage_list):
+    console = Console()
+
+    table = Table(show_header=True, header_style="bold magenta")
+    for key in stage_list[0].keys():
+        table.add_column(key)
+    for stage in stage_list:
+        table.add_row(
+            *[
+                str("[green]" + value + "[/green]" if value == "ok" else value)
+                for value in stage.values()
+            ]
+        )
+    console.print(table)
+
+
 @cli.command(
     name="status",
 )
+@click.option("--json", is_flag=True, help="Print status list as JSON")
 @click.pass_context
-def status(ctx):
+def status(ctx, json):
     """
     This function displays the status of each combination of parameters in a foreach-matrix, using the output from dvc status CLI.
     """
@@ -45,8 +64,7 @@ def status(ctx):
     status = os.popen("dvc status --json").read()
 
     # parse the output as JSON
-    status = json.loads(status)
-    print(status)
+    status = jsonlib.loads(status)
 
     # capture the output of "dvc stage list --all" CLI command
     stages = os.popen("dvc stage list --all").read()
@@ -64,8 +82,10 @@ def status(ctx):
 
     lock = yaml.safe_load(open("dvc.lock", "r"))
     stage_list = []
-    for stagename, stage in lock["stages"].items():
-        formatted_command = stage["cmd"]
+    for stagename, lock_stage in lock["stages"].items():
+        # if stage and stage not in stagename:
+        #     continue
+        formatted_command = lock_stage["cmd"]
         command_template = dvcyaml["stages"][stagename.split("@")[0]]["do"]["cmd"]
         params = unformat(command_template, formatted_command)
         stage_dict = {}
@@ -81,23 +101,11 @@ def status(ctx):
         stage_list.append(stage_dict)
 
     # Print stage_list as a nicely-formatted table
-    from rich.console import Console
-    from rich.table import Table
 
-    console = Console()
-
-    table = Table(show_header=True, header_style="bold magenta")
-    for key in stage_list[0].keys():
-        table.add_column(key)
-    for stage in stage_list:
-        table.add_row(
-            *[
-                str("[green]" + value + "[/green]" if value == "ok" else value)
-                for value in stage.values()
-            ]
-        )
-
-    console.print(table)
+    if json:
+        print(jsonlib.dumps(stage_list, indent=4))
+    else:
+        print_stage_list(stage_list)
 
 
 @cli.command(
