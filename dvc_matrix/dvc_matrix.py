@@ -11,6 +11,7 @@ from rich.table import Table
 
 
 def named_product(**items):
+    items = {name: [str(item) for item in value] for name, value in items.items()}
     Product = namedtuple("Product", items.keys())
     return [x._asdict() for x in starmap(Product, product(*items.values()))]
 
@@ -36,6 +37,8 @@ def cli():
 
 
 def print_stage_list(stage_list):
+    if len(stage_list) == 0:
+        return
     console = Console()
 
     table = Table(show_header=True, header_style="bold magenta")
@@ -79,33 +82,66 @@ def status(ctx, json):
     # get the contents of dvc.lock
 
     dvcyaml = yaml.safe_load(open("dvc.yaml", "r"))
+    matrix = yaml.safe_load(open("dvc-matrix.yaml", "r"))
 
     lock = yaml.safe_load(open("dvc.lock", "r"))
-    stage_list = []
-    for stagename, lock_stage in lock["stages"].items():
-        # if stage and stage not in stagename:
-        #     continue
-        formatted_command = lock_stage["cmd"]
-        command_template = dvcyaml["stages"][stagename.split("@")[0]]["do"]["cmd"]
-        params = unformat(command_template, formatted_command)
-        stage_dict = {}
-        stage_dict["stage_name"] = stagename
-        stage_dict.update(params)
-        try:
-            # stage_dict["status"] = status[stagename][0]["changed_outs"]
-            status[stagename]
-            stage_dict["status"] = "changed"
-        except KeyError:
-            stage_dict["status"] = "ok"
+    stage_lists = []
+    # for stagename, lock_stage in lock["stages"].items():
+    for yaml_name in dvcyaml["stages"]:
+        lock_stages = {
+            lock_name: lock_stage
+            for lock_name, lock_stage in lock["stages"].items()
+            if yaml_name in lock_name
+        }
+        if len(lock_stages) == 0:
+            print(f"Stage {yaml_name} not found in dvc.lock")
+            params = matrix["stages"][yaml_name]["foreach-matrix"]
+            param_combinations = named_product(**params)
+            stage_list = []
+            for i, combination in enumerate(param_combinations):
+                stage_dict = {}
+                stage_dict["stage_name"] = f"{yaml_name}@{i}"
+                stage_dict.update(combination)
+                stage_dict["status"] = "not run"
 
-        stage_list.append(stage_dict)
+                stage_list.append(stage_dict)
+
+            stage_lists.append(stage_list)
+            continue
+
+        else:
+            for stagename, lock_stage in lock_stages.items():
+                stage_list = []
+                # if stage and stage not in stagename:
+                #     continue
+                formatted_command = lock_stage["cmd"]
+                dvc_stage = dvcyaml["stages"][stagename.split("@")[0]]
+                if "do" not in dvc_stage:
+                    print(f"Stage {stagename} has no do section")
+                    continue
+                command_template = dvc_stage["do"]["cmd"]
+                params = unformat(command_template, formatted_command)
+                stage_dict = {}
+                stage_dict["stage_name"] = stagename
+                stage_dict.update(params)
+                try:
+                    # stage_dict["status"] = status[stagename][0]["changed_outs"]
+                    status[stagename]
+                    stage_dict["status"] = "changed"
+                except KeyError:
+                    stage_dict["status"] = "ok"
+
+                stage_list.append(stage_dict)
+
+            stage_lists.append(stage_list)
 
     # Print stage_list as a nicely-formatted table
 
     if json:
-        print(jsonlib.dumps(stage_list, indent=4))
+        print(jsonlib.dumps(stage_lists, indent=4))
     else:
-        print_stage_list(stage_list)
+        for stage_list in stage_lists:
+            print_stage_list(stage_list)
 
 
 @cli.command(
