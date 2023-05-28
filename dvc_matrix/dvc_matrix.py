@@ -21,8 +21,8 @@ def yamlgrid(**items):
 
 
 def unformat(template, formatted):
-    keys = re.findall(r"\${item.([a-z]+)}", template)
-    pattern = re.sub(r"\${item.([a-z]+)}", r"([^/]+)", template)
+    keys = re.findall(r"\${item.([a-z_-]+)}", template)
+    pattern = re.sub(r"\${item.([a-z_-]+)}", r"([^/]+)", template)
     pattern = re.compile(pattern)
     match = pattern.search(formatted)
     values = match.groups()
@@ -63,36 +63,23 @@ def status(ctx, json):
     """
     This function displays the status of each combination of parameters in a foreach-matrix, using the output from dvc status CLI.
     """
-    # capture the output of "dvc status --json" CLI command
+
     status = os.popen("dvc status --json").read()
-
-    # parse the output as JSON
     status = jsonlib.loads(status)
-
-    # capture the output of "dvc stage list --all" CLI command
-    stages = os.popen("dvc stage list --all").read()
-
-    # parse the output: each line has "<stage_name> Outputs <output_path>"
-
-    # split the output by lines
-    stages = stages.split("\n")
-
-    stages = {s[0]: s[3] for s in [s.split(" ") for s in stages if s]}
-
-    # get the contents of dvc.lock
 
     dvcyaml = yaml.safe_load(open("dvc.yaml", "r"))
     matrix = yaml.safe_load(open("dvc-matrix.yaml", "r"))
-
     lock = yaml.safe_load(open("dvc.lock", "r"))
+
     stage_lists = []
-    # for stagename, lock_stage in lock["stages"].items():
     for yaml_name in dvcyaml["stages"]:
+
         lock_stages = {
             lock_name: lock_stage
             for lock_name, lock_stage in lock["stages"].items()
             if yaml_name in lock_name
         }
+
         if len(lock_stages) == 0:
             print(f"Stage {yaml_name} not found in dvc.lock")
             params = matrix["stages"][yaml_name]["foreach-matrix"]
@@ -107,35 +94,34 @@ def status(ctx, json):
                 stage_list.append(stage_dict)
 
             stage_lists.append(stage_list)
-            continue
 
         else:
+            stage_list = []
             for stagename, lock_stage in lock_stages.items():
-                stage_list = []
-                # if stage and stage not in stagename:
-                #     continue
-                formatted_command = lock_stage["cmd"]
                 dvc_stage = dvcyaml["stages"][stagename.split("@")[0]]
                 if "do" not in dvc_stage:
                     print(f"Stage {stagename} has no do section")
                     continue
-                command_template = dvc_stage["do"]["cmd"]
-                params = unformat(command_template, formatted_command)
+
+                # get stage parameters
+                formatted_out = lock_stage["outs"][0]["path"]
+                out_template = dvc_stage["do"]["outs"][0]
+                params = unformat(out_template, formatted_out)
+
                 stage_dict = {}
                 stage_dict["stage_name"] = stagename
                 stage_dict.update(params)
-                try:
-                    # stage_dict["status"] = status[stagename][0]["changed_outs"]
-                    status[stagename]
-                    stage_dict["status"] = "changed"
-                except KeyError:
+
+                if stagename not in status:
                     stage_dict["status"] = "ok"
+                elif "changed command" in status[stagename]:
+                    stage_dict["status"] = "changed command"
+                else:
+                    stage_dict["status"] = ", ".join([key for key in ["changed outs", "changed deps"] if key in status[stagename]])
 
                 stage_list.append(stage_dict)
 
             stage_lists.append(stage_list)
-
-    # Print stage_list as a nicely-formatted table
 
     if json:
         print(jsonlib.dumps(stage_lists, indent=4))
