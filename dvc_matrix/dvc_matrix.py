@@ -198,6 +198,9 @@ def status(ctx, json):
     for yaml_name in dvcyaml["stages"]:
         stage_list = get_stage_list(dvcyaml, matrix, lock, yaml_name)
         if stage_list:
+
+
+
             stage_lists.append(stage_list)
 
     if json:
@@ -250,3 +253,55 @@ def update(ctx, file, output):
 
 if __name__ == "__main__":
     cli()
+
+        # lock_stages = {
+        #     lock_name: lock_stage
+        #     for lock_name, lock_stage in lock["stages"].items()
+        #     if yaml_name in lock_name
+        # }
+
+        # if len(lock_stages) == 0:
+        #     print(f"Stage {yaml_name} not found in dvc.lock")
+        #     params = matrix["stages"][yaml_name]["foreach-matrix"]
+        #     param_combinations = named_product(**params)
+        #     stage_list = []
+        #     for i, combination in enumerate(param_combinations):
+        #         stage_dict = {}
+        #         stage_dict["stage_name"] = f"{yaml_name}@{i}"
+        #         stage_dict.update(combination)
+        #         stage_dict["status"] = "not run"
+        #         stage_dict["cmd"] = dvcyaml["stages"][yaml_name]["do"]["cmd"].replace("\\", "\\\n")
+        #         for key, val in combination.items():
+        #             stage_dict["cmd"] = stage_dict["cmd"].replace(
+        #                 f"${{item.{key}}}", val
+        #             )
+
+        #         stage_list.append(stage_dict)
+
+        #     stage_lists.append(stage_list)
+
+        # else:
+        #     stage_list = []
+        #     for stagename, lock_stage in lock_stages.items():
+        #         dvc_stage = dvcyaml["stages"][stagename.split("@")[0]]
+        #         if "do" not in dvc_stage:
+        #             print(f"Stage {stagename} has no do section")
+        #             continue
+
+        #         # get stage parameters
+        #         formatted_out = lock_stage["outs"][0]["path"]
+        #         out_template = dvc_stage["do"]["outs"][0]
+        #         params = unformat(out_template, formatted_out)
+
+        #         stage_dict = {}
+        #         stage_dict["stage_name"] = stagename
+        #         stage_dict.update(params)
+
+        #         if stagename not in status:
+        #             stage_dict["status"] = "ok"
+        #         elif "changed command" in status[stagename]:
+        #             stage_dict["status"] = "changed command"
+        #         else:
+        #             stage_dict["status"] = ", ".join([key for key in ["changed outs", "changed deps"] if key in status[stagename]])
+
+        #         stage_list.append(stage_dict)
