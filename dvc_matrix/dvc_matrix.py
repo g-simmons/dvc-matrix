@@ -150,7 +150,10 @@ def get_stages():
 
 def get_stage_list_from_matrix(stage_name, matrix):
     params = matrix["stages"][stage_name]["foreach-matrix"]
-    global_vars = matrix.get("vars", {})
+    global_vars = {}
+    for var in matrix.get("vars", []):
+        global_vars.update(var)
+    
     vars = matrix["stages"][stage_name].get("vars", {})
     param_combinations = named_product(**params)
     stage_list = []
