@@ -1,0 +1,10 @@
+stages:
+  add:
+    foreach-matrix: { a: ["1", "2", "3"], b: ["1", "2", "3"] }
+    do:
+      cmd: cat data/${item.a}.txt data/${item.b}.txt > data/${item.a}_${item.b}.txt
+      deps:
+        - data/${item.a}.txt
+        - data/${item.b}.txt
+      outs:
+        - data/${item.a}_${item.b}.txt

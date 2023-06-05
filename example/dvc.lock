@@ -1,0 +1,119 @@
+schema: '2.0'
+stages:
+  add@0:
+    cmd: cat data/1.txt data/1.txt > data/1_1.txt
+    deps:
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    outs:
+    - path: data/1_1.txt
+      md5: f2160c8ffedf48068f2e1137e0a3a7e7
+      size: 4
+  add@6:
+    cmd: cat data/3.txt data/1.txt > data/3_1.txt
+    deps:
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    outs:
+    - path: data/3_1.txt
+      md5: e367d6d18cd2d7496f4e3f1f600d77f5
+      size: 4
+  add@8:
+    cmd: cat data/3.txt data/3.txt > data/3_3.txt
+    deps:
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    outs:
+    - path: data/3_3.txt
+      md5: 24f6e6d78ba285f5c3c90539890a1924
+      size: 4
+  add@4:
+    cmd: cat data/2.txt data/2.txt > data/2_2.txt
+    deps:
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    outs:
+    - path: data/2_2.txt
+      md5: 2d768b90fac961e08325e108fe7ea496
+      size: 4
+  add@7:
+    cmd: cat data/3.txt data/2.txt > data/3_2.txt
+    deps:
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    outs:
+    - path: data/3_2.txt
+      md5: bd882381d46c0cb1cf70ae4338336a36
+      size: 4
+  add@3:
+    cmd: cat data/2.txt data/1.txt > data/2_1.txt
+    deps:
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    outs:
+    - path: data/2_1.txt
+      md5: cb0e93933b5e2202825f38da7587cf07
+      size: 4
+  add@1:
+    cmd: cat data/1.txt data/2.txt > data/1_2.txt
+    deps:
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    outs:
+    - path: data/1_2.txt
+      md5: 6ddb4095eb719e2a9f0a3f95677d24e0
+      size: 4
+  add@5:
+    cmd: cat data/2.txt data/3.txt > data/2_3.txt
+    deps:
+    - path: data/2.txt
+      md5: 26ab0db90d72e28ad0ba1e22ee510510
+      size: 2
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    outs:
+    - path: data/2_3.txt
+      md5: 19283599a9866154a20cbb0be6adc1bc
+      size: 4
+  add@2:
+    cmd: cat data/1.txt data/3.txt > data/1_3.txt
+    deps:
+    - path: data/1.txt
+      md5: b026324c6904b2a9cb4b88d6d61c81d1
+      size: 2
+    - path: data/3.txt
+      md5: 6d7fce9fee471194aa8b5b6e47267f03
+      size: 2
+    outs:
+    - path: data/1_3.txt
+      md5: 0a88863510308751293f4b91afc07dd6
+      size: 4

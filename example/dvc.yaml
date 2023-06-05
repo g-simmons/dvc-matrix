@@ -1,0 +1,28 @@
+stages:
+  add:
+    do:
+      cmd: cat data/${item.a}.txt data/${item.b}.txt > data/${item.a}_${item.b}.txt
+      deps:
+      - data/${item.a}.txt
+      - data/${item.b}.txt
+      outs:
+      - data/${item.a}_${item.b}.txt
+    foreach:
+    - a: '1'
+      b: '1'
+    - a: '1'
+      b: '2'
+    - a: '1'
+      b: '3'
+    - a: '2'
+      b: '1'
+    - a: '2'
+      b: '2'
+    - a: '2'
+      b: '3'
+    - a: '3'
+      b: '1'
+    - a: '3'
+      b: '2'
+    - a: '3'
+      b: '3'
