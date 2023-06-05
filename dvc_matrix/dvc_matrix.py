@@ -43,7 +43,7 @@ def print_stage_list(stage_list):
         return
     console = Console()
 
-    table = Table(show_header=True, header_style="bold magenta")
+    table = Table(show_header=True, header_style="bold magenta",show_lines=False,box=None)
     for key in stage_list[0].keys():
         table.add_column(key)
     for stage in stage_list:
@@ -83,16 +83,17 @@ def run(ctx):
 
     # completer = FuzzyWordCompleter(words=meta_dict.keys(), meta_dict=meta_dict)
     completer = FuzzyWordCompleter(
-        words=[s["cmd"] for s in stage_list],
-        meta_dict={s["cmd"]: get_stage_key(s) for s in stage_list},
+        # words=[s["cmd"] for s in stage_list],
+        words = [s["stage_name"] for s in stage_list],
+        meta_dict={s["stage_name"]: get_stage_key(s) for s in stage_list},
     )
 
-    cmd = prompt(
+    stage_name = prompt(
         "Select stage to run: ",
         completer=completer,
     )
     # paste the selected command into the terminal and exit, so that the user can run it
-    print(cmd)
+    print([s["cmd"] for s in stage_list if s["stage_name"] == stage_name][0])
 
 
 def get_status():
@@ -150,9 +151,7 @@ def get_stages():
 def get_stage_list_from_matrix(stage_name, matrix):
     params = matrix["stages"][stage_name]["foreach-matrix"]
     global_vars = matrix.get("vars", {})
-    print(global_vars)
     vars = matrix["stages"][stage_name].get("vars", {})
-    print(vars)
     param_combinations = named_product(**params)
     stage_list = []
     for i, combination in enumerate(param_combinations):
@@ -160,10 +159,8 @@ def get_stage_list_from_matrix(stage_name, matrix):
         stage_dict["stage_name"] = f"{stage_name}@{i}"
         stage_dict.update(combination)
         stage_dict["status"] = "not run"
-        print(combination)
         if "do" in matrix["stages"][stage_name]:
-            command_template = matrix["stages"][stage_name]["do"]["cmd"].replace("$","").replace("item.","")
-            print(command_template)
+            command_template = matrix["stages"][stage_name]["do"]["cmd"].replace("$","").replace("item.","").replace("\\", "\\\n\t")
             stage_dict["cmd"] = command_template.format(**combination, **vars, **global_vars)
 
         stage_list.append(stage_dict)
