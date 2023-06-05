@@ -128,9 +128,31 @@ def get_stages():
     stages = {s[0]: s[3] for s in stages_output}
     return stages
 
+#     print(f"Stage {yaml_name} not found in dvc.lock")
+#     params = matrix["stages"][yaml_name]["foreach-matrix"]
+#     param_combinations = named_product(**params)
+#     stage_list = []
+#     for i, combination in enumerate(param_combinations):
+#         stage_dict = {}
+#         stage_dict["stage_name"] = f"{yaml_name}@{i}"
+#         stage_dict.update(combination)
+#         stage_dict["status"] = "not run"
+#         stage_dict["cmd"] = dvcyaml["stages"][yaml_name]["do"]["cmd"].replace("\\", "\\\n")
+#         for key, val in combination.items():
+#             stage_dict["cmd"] = stage_dict["cmd"].replace(
+#                 f"${{item.{key}}}", val
+#             )
+
+#         stage_list.append(stage_dict)
+
+#     stage_lists.append(stage_list)
 
 def get_stage_list_from_matrix(stage_name, matrix):
     params = matrix["stages"][stage_name]["foreach-matrix"]
+    global_vars = matrix.get("vars", {})
+    print(global_vars)
+    vars = matrix["stages"][stage_name].get("vars", {})
+    print(vars)
     param_combinations = named_product(**params)
     stage_list = []
     for i, combination in enumerate(param_combinations):
@@ -138,6 +160,11 @@ def get_stage_list_from_matrix(stage_name, matrix):
         stage_dict["stage_name"] = f"{stage_name}@{i}"
         stage_dict.update(combination)
         stage_dict["status"] = "not run"
+        print(combination)
+        if "do" in matrix["stages"][stage_name]:
+            command_template = matrix["stages"][stage_name]["do"]["cmd"].replace("$","").replace("item.","")
+            print(command_template)
+            stage_dict["cmd"] = command_template.format(**combination, **vars, **global_vars)
 
         stage_list.append(stage_dict)
 
@@ -198,9 +225,6 @@ def status(ctx, json):
     for yaml_name in dvcyaml["stages"]:
         stage_list = get_stage_list(dvcyaml, matrix, lock, yaml_name)
         if stage_list:
-
-
-
             stage_lists.append(stage_list)
 
     if json:
@@ -261,24 +285,7 @@ if __name__ == "__main__":
         # }
 
         # if len(lock_stages) == 0:
-        #     print(f"Stage {yaml_name} not found in dvc.lock")
-        #     params = matrix["stages"][yaml_name]["foreach-matrix"]
-        #     param_combinations = named_product(**params)
-        #     stage_list = []
-        #     for i, combination in enumerate(param_combinations):
-        #         stage_dict = {}
-        #         stage_dict["stage_name"] = f"{yaml_name}@{i}"
-        #         stage_dict.update(combination)
-        #         stage_dict["status"] = "not run"
-        #         stage_dict["cmd"] = dvcyaml["stages"][yaml_name]["do"]["cmd"].replace("\\", "\\\n")
-        #         for key, val in combination.items():
-        #             stage_dict["cmd"] = stage_dict["cmd"].replace(
-        #                 f"${{item.{key}}}", val
-        #             )
 
-        #         stage_list.append(stage_dict)
-
-        #     stage_lists.append(stage_list)
 
         # else:
         #     stage_list = []
